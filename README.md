@@ -1,1 +1,1 @@
-https://justinsteinmetz.github.io/DebateSkills/
+https://justinsteinmetz.github.io/How-To-Debate-part-one/
