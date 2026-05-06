@@ -1,1 +1,2 @@
-https://justinsteinmetz.github.io/How-To-Debate-part-one/
+
+(https://justinsteinmetz.github.io/How-to-Debate-part-one/)
