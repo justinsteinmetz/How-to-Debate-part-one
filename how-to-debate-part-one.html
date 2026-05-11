@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Debate — Part One · Build &amp; Fail</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090f;
+  --surface: rgba(255,255,255,0.04);
+  --surface-2: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border-hi: rgba(255,255,255,0.18);
+  --text: #e8eaf0;
+  --text-2: #8892a4;
+  --text-3: #4a5568;
+  --red: #c85a5a;
+  --red-dim: rgba(200,90,90,0.12);
+  --blue: #5a8ec8;
+  --blue-dim: rgba(90,142,200,0.12);
+  --gold: #c8a85a;
+  --gold-dim: rgba(200,168,90,0.12);
+  --green: #5ab87a;
+  --green-dim: rgba(90,184,122,0.12);
+  --accent: #c8a85a;
+  --mono: 'DM Mono', monospace;
+  --serif: 'Playfair Display', serif;
+  --sans: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.7; overflow-x: hidden; }
+
+#canvas-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.45; }
+
+/* ── PROGRESS ── */
+.progress-strip { position: fixed; top: 0; left: 0; height: 2px; background: var(--red); z-index: 200; transition: width 0.3s ease; pointer-events: none; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(7,9,15,0.9); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 2rem; height: 52px;
+}
+.nav-brand { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; }
+.nav-brand strong { color: var(--text); }
+.nav-brand span { color: var(--text-3); }
+.nav-right { display: flex; align-items: center; gap: 1rem; }
+.mode-btn {
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+  background: transparent; border: 1px solid var(--border); color: var(--text-3);
+  padding: 0.3rem 0.8rem; cursor: pointer; border-radius: 2px; transition: all 0.2s;
+}
+.mode-btn:hover { border-color: var(--red); color: var(--text-2); }
+.mode-btn.active { border-color: var(--red); color: var(--red); }
+.nav-part { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
+
+/* ── WRAP ── */
+.wrap { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 5rem 2rem 6rem; }
+
+/* ── SECTION HEADERS ── */
+.sec-header { padding: 3.5rem 0 0; margin-bottom: 1.75rem; border-top: 1px solid var(--border); }
+.sec-header:first-of-type { border-top: none; padding-top: 3rem; }
+.sec-eyebrow { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+.sec-eyebrow::before { content: ''; display: block; width: 16px; height: 1px; background: var(--border-hi); }
+.sec-title { font-family: var(--serif); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.1; margin-bottom: 0.6rem; }
+.sec-sub { font-size: 0.95rem; color: var(--text-2); font-style: italic; max-width: 56ch; line-height: 1.6; }
+
+/* ── TIMING BADGE ── */
+.timing-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); border: 1px solid var(--border); padding: 0.2rem 0.6rem; margin-bottom: 1.5rem; border-radius: 2px; }
+
+/* ── PROSE ── */
+p { margin-bottom: 1rem; color: var(--text-2); }
+p:last-child { margin-bottom: 0; }
+em { color: var(--text); font-style: italic; }
+
+/* ── DIVIDER ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+/* ── DEF BOX ── */
+.def-box { border-left: 3px solid var(--accent); padding: 1.1rem 1.4rem; background: var(--surface); margin: 1.5rem 0; border-radius: 0 4px 4px 0; }
+.def-label { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.35rem; }
+.def-text { font-family: var(--serif); font-size: 1.05rem; font-style: italic; color: var(--text); line-height: 1.55; }
+
+/* ── VS GRID ── */
+.vs-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; margin: 1.5rem 0; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.vs-col { padding: 1.25rem 1.4rem; }
+.vs-col:first-child { background: var(--red-dim); border-right: 1px solid var(--border); }
+.vs-col:last-child { background: var(--green-dim); }
+.vs-divider { display: flex; align-items: center; justify-content: center; padding: 0 0.75rem; font-family: var(--serif); font-size: 1.2rem; color: var(--text-3); background: var(--surface); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+.vs-label { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.75rem; }
+.vs-col:first-child .vs-label { color: var(--red); }
+.vs-col:last-child .vs-label { color: var(--green); }
+.vs-item { font-size: 0.82rem; color: var(--text-2); line-height: 1.55; padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
+.vs-item:last-child { border-bottom: none; }
+
+/* ── PEEL FRAMEWORK ── */
+.framework { margin: 1.5rem 0; display: flex; flex-direction: column; gap: 2px; }
+.framework-step { display: grid; grid-template-columns: 52px 1fr; overflow: hidden; border: 1px solid var(--border); border-radius: 3px; transition: border-color 0.2s; }
+.framework-step:hover { border-color: var(--border-hi); }
+.step-letter { display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 2rem; font-weight: 700; flex-shrink: 0; }
+.step-P .step-letter { background: var(--red-dim); color: var(--red); }
+.step-E .step-letter { background: var(--blue-dim); color: var(--blue); }
+.step-E2 .step-letter { background: var(--green-dim); color: var(--green); }
+.step-L .step-letter { background: var(--gold-dim); color: var(--gold); }
+.step-body { padding: 0.85rem 1.1rem; border-left: 1px solid var(--border); }
+.step-name { font-family: var(--mono); font-size: 0.6rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.25rem; }
+.step-desc { font-size: 0.82rem; color: var(--text-2); line-height: 1.5; margin-bottom: 0.4rem; }
+.step-example { font-family: var(--mono); font-size: 0.72rem; color: var(--blue); background: var(--blue-dim); padding: 0.35rem 0.65rem; border-left: 2px solid var(--blue); line-height: 1.55; border-radius: 0 2px 2px 0; }
+
+/* ── EXAMPLE BLOCK ── */
+.example-block { border: 1px solid var(--border); border-radius: 4px; margin: 1.5rem 0; overflow: hidden; }
+.example-header { background: rgba(255,255,255,0.06); padding: 0.55rem 1.1rem; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.ex-tag { font-size: 0.57rem; padding: 0.12rem 0.45rem; border-radius: 1px; }
+.ex-tag-prop { background: var(--red-dim); color: var(--red); }
+.ex-tag-opp { background: var(--blue-dim); color: var(--blue); }
+.ex-tag-frame { background: var(--gold-dim); color: var(--gold); }
+.example-body { padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: 0.65rem; }
+.example-line { display: grid; grid-template-columns: 30px 1fr; gap: 0.65rem; align-items: baseline; }
+.line-tag { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.12rem 0.25rem; border-radius: 1px; text-align: center; font-weight: 500; }
+.tag-p { background: var(--red-dim); color: var(--red); }
+.tag-e { background: var(--blue-dim); color: var(--blue); }
+.tag-ex { background: var(--green-dim); color: var(--green); }
+.tag-l { background: var(--gold-dim); color: var(--gold); }
+.tag-ass { background: var(--gold-dim); color: var(--gold); }
+.line-text { font-size: 0.82rem; color: var(--text-2); line-height: 1.55; }
+
+/* ── REBUTTAL STEPS ── */
+.rebuttal-steps { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0; counter-reset: rb; }
+.rebuttal-step { counter-increment: rb; display: flex; gap: 1rem; padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); position: relative; transition: border-color 0.2s; }
+.rebuttal-step:hover { border-color: var(--border-hi); }
+.rebuttal-step::after { content: counter(rb); font-family: var(--serif); font-size: 3rem; font-weight: 700; color: rgba(255,255,255,0.04); position: absolute; right: 0.75rem; top: 0.25rem; line-height: 1; pointer-events: none; }
+.rb-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+.rb-title { font-family: var(--mono); font-size: 0.65rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); margin-bottom: 0.2rem; }
+.rb-desc { font-size: 0.8rem; color: var(--text-2); line-height: 1.5; margin-bottom: 0.4rem; }
+.rb-phrase { font-family: var(--mono); font-size: 0.7rem; color: var(--red); background: var(--red-dim); padding: 0.25rem 0.55rem; border-left: 2px solid var(--red); display: inline-block; line-height: 1.5; border-radius: 0 2px 2px 0; }
+
+/* ── TECHNIQUE GRID ── */
+.technique-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 1.5rem 0; }
+.technique-card { background: var(--surface); padding: 1.1rem; transition: background 0.2s; }
+.technique-card:hover { background: var(--surface-2); }
+.tc-greek { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.15rem; }
+.tc-english { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.6rem; }
+.tc-def { font-size: 0.78rem; color: var(--text-2); line-height: 1.5; margin-bottom: 0.6rem; }
+.tc-example { font-size: 0.75rem; font-style: italic; color: var(--text-2); border-left: 2px solid var(--border-hi); padding-left: 0.55rem; line-height: 1.5; }
+
+/* ── POI GRID ── */
+.poi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 1.5rem 0; }
+.poi-col { background: var(--surface); padding: 1.1rem 1.25rem; }
+.poi-col-label { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.poi-item { font-size: 0.8rem; color: var(--text-2); line-height: 1.5; padding: 0.3rem 0; border-bottom: 1px solid var(--border); }
+.poi-item:last-child { border-bottom: none; }
+.poi-item strong { color: var(--text); font-weight: 400; font-family: var(--mono); font-size: 0.62rem; display: block; margin-bottom: 0.1rem; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ── TASK BOX ── */
+.task-box { border: 1px solid var(--border); border-radius: 4px; margin: 2rem 0; overflow: hidden; }
+.task-header { background: rgba(255,255,255,0.06); padding: 0.6rem 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.task-header-left { display: flex; align-items: center; gap: 0.65rem; }
+.task-num { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; line-height: 1; color: var(--red); }
+.task-title { font-family: var(--mono); font-size: 0.65rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
+.task-time { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.08em; color: var(--text-3); border: 1px solid var(--border); padding: 0.18rem 0.45rem; border-radius: 2px; }
+.task-body { padding: 1.1rem 1.25rem; }
+.task-instruction { font-size: 0.88rem; color: var(--text); margin-bottom: 1rem; line-height: 1.6; }
+.task-inputs { display: flex; flex-direction: column; gap: 0.75rem; }
+.input-group { margin-bottom: 0.25rem; }
+.input-label { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.2rem; }
+.task-input { width: 100%; font-family: var(--mono); font-size: 0.78rem; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); outline: none; padding: 0.45rem 0; transition: border-color 0.2s; resize: none; line-height: 1.6; }
+.task-input:focus { border-bottom-color: var(--border-hi); }
+.task-input::placeholder { color: var(--text-3); font-style: italic; }
+.task-hint { font-size: 0.75rem; color: var(--text-3); font-style: italic; margin-top: 0.65rem; border-left: 2px solid var(--border); padding-left: 0.55rem; line-height: 1.5; }
+
+/* ── MOTION CARD ── */
+.motion-card { background: rgba(255,255,255,0.05); border: 1px solid var(--border-hi); border-radius: 6px; padding: 2.25rem 2rem; margin: 2rem 0; text-align: center; position: relative; overflow: hidden; }
+.motion-card::before { content: 'MOTION'; position: absolute; top: -0.5rem; left: 50%; transform: translateX(-50%); font-family: var(--serif); font-size: 7rem; font-weight: 700; color: rgba(255,255,255,0.025); letter-spacing: -0.04em; white-space: nowrap; pointer-events: none; line-height: 1; }
+.motion-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.85rem; }
+.motion-text { font-family: var(--serif); font-size: clamp(1.3rem, 3.5vw, 2rem); font-weight: 600; line-height: 1.25; color: var(--text); max-width: 600px; margin: 0 auto 1.1rem; }
+.motion-sides { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; }
+.motion-side { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.side-prop { color: var(--red); }
+.side-opp { color: var(--blue); }
+.side-prop::before, .side-opp::before { content: '● '; }
+
+/* ── TIMING TABLE ── */
+.timing-guide { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 1.5rem 0; }
+.timing-row { display: grid; grid-template-columns: 72px 110px 1fr; border-bottom: 1px solid var(--border); }
+.timing-row:last-child { border-bottom: none; }
+.timing-row.header { background: rgba(255,255,255,0.04); }
+.timing-cell { padding: 0.65rem 0.9rem; font-size: 0.8rem; border-right: 1px solid var(--border); color: var(--text-2); }
+.timing-cell:last-child { border-right: none; }
+.timing-row.header .timing-cell { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+.timing-time { font-family: var(--mono); color: var(--red); font-size: 0.78rem; font-weight: 500; }
+.timing-phase { font-family: var(--mono); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.04em; color: var(--text); }
+
+/* ── PULL QUOTE ── */
+.pull-quote { border-left: 3px solid var(--red); padding: 0.9rem 1.25rem; margin: 1.5rem 0; background: var(--red-dim); border-radius: 0 4px 4px 0; }
+.pull-quote p { font-family: var(--serif); font-size: 1rem; font-style: italic; color: var(--text); line-height: 1.55; margin-bottom: 0; }
+
+/* ── NOTE BOX ── */
+.note-box { background: var(--gold-dim); border-left: 3px solid var(--gold); padding: 0.8rem 1.1rem; margin: 1.25rem 0; font-size: 0.8rem; color: var(--text-2); line-height: 1.6; border-radius: 0 4px 4px 0; }
+.note-box strong { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); display: block; margin-bottom: 0.25rem; }
+
+/* ── END BOX ── */
+.end-box { background: var(--surface); border: 1px solid var(--border-hi); border-radius: 6px; padding: 1.5rem 1.75rem; margin-top: 2rem; }
+.end-label { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.65rem; }
+.end-text { font-family: var(--serif); font-size: 1rem; color: var(--text-2); line-height: 1.65; }
+.end-text em { color: var(--text); font-style: italic; }
+
+/* ── PROJECTOR MODE ── */
+.projector-slide { display: none; position: fixed; inset: 52px 0 0 0; background: var(--bg); flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 3rem 4rem; z-index: 50; overflow: hidden; border-top: 1px solid var(--border); }
+.projector-slide::before { content: attr(data-section); position: absolute; bottom: -1rem; right: 2rem; font-family: var(--serif); font-size: 11rem; font-weight: 700; color: rgba(255,255,255,0.025); line-height: 1; letter-spacing: -0.04em; pointer-events: none; }
+.slide-kicker { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+.slide-kicker::before, .slide-kicker::after { content: ''; display: block; width: 24px; height: 1px; background: var(--red); }
+.slide-heading { font-family: var(--serif); font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 700; line-height: 1; letter-spacing: -0.02em; color: var(--text); margin-bottom: 1.25rem; max-width: 900px; }
+.slide-body { font-size: clamp(0.95rem, 2.2vw, 1.25rem); color: var(--text-2); max-width: 680px; line-height: 1.65; font-style: italic; font-family: var(--serif); }
+.slide-list { list-style: none; margin-top: 1.5rem; text-align: left; max-width: 600px; }
+.slide-list li { font-family: var(--serif); font-size: clamp(0.95rem, 2vw, 1.35rem); color: var(--text); padding: 0.5rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 0.75rem; }
+.slide-list li::before { content: attr(data-letter); font-size: 1.6em; font-weight: 700; color: var(--red); line-height: 1; flex-shrink: 0; width: 1ch; }
+.slide-list li:last-child { border-bottom: none; }
+body.projector .wrap { display: none; }
+body.projector .projector-slide { display: flex; }
+.slide-nav { position: fixed; bottom: 1.5rem; right: 1.5rem; display: none; gap: 0.5rem; z-index: 60; }
+body.projector .slide-nav { display: flex; }
+.slide-btn { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid var(--border); padding: 0.45rem 0.9rem; cursor: pointer; transition: all 0.2s; border-radius: 2px; }
+.slide-btn:hover { background: var(--red); border-color: var(--red); }
+.slide-btn:disabled { opacity: 0.3; cursor: default; }
+.slide-counter { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-3); display: flex; align-items: center; padding: 0 0.5rem; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .technique-grid { grid-template-columns: 1fr; }
+  .poi-grid { grid-template-columns: 1fr; }
+  .vs-grid { grid-template-columns: 1fr; }
+  .vs-divider { display: none; }
+  .timing-row { grid-template-columns: 56px 84px 1fr; }
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+<div class="progress-strip" id="progressStrip" style="width:0%"></div>
+
+<nav>
+  <div class="nav-brand"><strong>How to Debate</strong> <span>· Part One · Build &amp; Fail</span></div>
+  <div class="nav-right">
+    <span class="nav-part">DSP English Hub</span>
+    <button class="mode-btn" id="modeToggle" onclick="toggleMode()">⬜ Projector</button>
+  </div>
+</nav>
+
+<!-- PROJECTOR SLIDES -->
+<div class="projector-slide" id="slide-0" data-section="0">
+  <div class="slide-kicker">How to Debate · Part One</div>
+  <div class="slide-heading">Build<br>&amp; Fail</div>
+  <div class="slide-body">Today you learn to argue well. It won't be enough. That's the point.</div>
+</div>
+<div class="projector-slide" id="slide-1" data-section="1">
+  <div class="slide-kicker">Section 1</div>
+  <div class="slide-heading">What Debate<br>Actually Is</div>
+  <div class="slide-body">Debate is structured disagreement with a purpose: to test ideas under pressure until the better argument survives.</div>
+</div>
+<div class="projector-slide" id="slide-2" data-section="2">
+  <div class="slide-kicker">Section 2</div>
+  <div class="slide-heading">Build the<br>Argument</div>
+  <div class="slide-body">Every argument has four layers. Miss one and the whole thing collapses.</div>
+  <ul class="slide-list">
+    <li data-letter="P">Point — your claim in one clear sentence</li>
+    <li data-letter="E">Explain — the reasoning behind it</li>
+    <li data-letter="E">Evidence — a fact, statistic, or example</li>
+    <li data-letter="L">Link — connect back to the motion</li>
+  </ul>
+</div>
+<div class="projector-slide" id="slide-3" data-section="3">
+  <div class="slide-kicker">Section 3</div>
+  <div class="slide-heading">How to<br>Rebut</div>
+  <div class="slide-body">Rebuttal is not "I disagree." It is a precise surgical strike on the logic of what was just said.</div>
+</div>
+<div class="projector-slide" id="slide-4" data-section="4">
+  <div class="slide-kicker">Section 4</div>
+  <div class="slide-heading">Ethos · Pathos<br>· Logos</div>
+  <div class="slide-body">Three modes of persuasion. Strong debaters use all three — but they make choices about which one is doing the real work.</div>
+</div>
+<div class="projector-slide" id="slide-5" data-section="5">
+  <div class="slide-kicker">Section 5</div>
+  <div class="slide-heading">Points of<br>Information</div>
+  <div class="slide-body">One sentence. Timed. Accepted or declined. Always strategic.</div>
+</div>
+<div class="projector-slide" id="slide-6" data-section="6">
+  <div class="slide-kicker">Round 1</div>
+  <div class="slide-heading">PEEL + Rebuttal<br>only</div>
+  <div class="slide-body">No new tools. Argue your assigned side as well as you can. Feel the limitation first.</div>
+</div>
+<div class="projector-slide" id="slide-end" data-section="END">
+  <div class="slide-kicker">End of Part One</div>
+  <div class="slide-heading">Both sides<br>argued well.<br>No one won.</div>
+  <div class="slide-body">You were both arguing inside the same frame. Neither side questioned the assumption underneath. That discomfort is the point. We'll name it in Part Two.</div>
+</div>
+
+<div class="slide-nav">
+  <button class="slide-btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Prev</button>
+  <span class="slide-counter" id="slideCounter">1 / 8</span>
+  <button class="slide-btn" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+</div>
+
+<!-- STUDENT CONTENT -->
+<div class="wrap">
+
+  <!-- SECTION 1 -->
+  <div class="sec-header" id="sec1">
+    <div class="sec-eyebrow">Section 1</div>
+    <h2 class="sec-title">What Debate Actually Is</h2>
+    <p class="sec-sub">Not shouting. Not winning. Something more demanding than both.</p>
+  </div>
+  <div class="timing-badge">⏱ 5–7 min</div>
+
+  <p>Debate is not about being the loudest or the most confident. It's about making the better argument — and being willing to have yours taken apart in public.</p>
+
+  <div class="def-box">
+    <div class="def-label">Debate is</div>
+    <div class="def-text">Structured disagreement with a purpose: to test ideas under pressure until the better argument survives.</div>
+  </div>
+
+  <p>The key word is <em>structured</em>. Informal arguments collapse into emotion and interruption. Formal debate has rules — and rules force precision.</p>
+
+  <div class="vs-grid">
+    <div class="vs-col">
+      <div class="vs-label">Argument (informal)</div>
+      <div class="vs-item">Emotional, reactive</div>
+      <div class="vs-item">No structure, no time limits</div>
+      <div class="vs-item">Goal: to "win" or not back down</div>
+      <div class="vs-item">Personal — about the person, not the idea</div>
+      <div class="vs-item">Evidence optional</div>
+    </div>
+    <div class="vs-divider">vs</div>
+    <div class="vs-col">
+      <div class="vs-label">Debate (formal)</div>
+      <div class="vs-item">Reasoned, prepared</div>
+      <div class="vs-item">Clear structure and time limits</div>
+      <div class="vs-item">Goal: to persuade the audience</div>
+      <div class="vs-item">Impersonal — about the idea, not the person</div>
+      <div class="vs-item">Evidence required</div>
+    </div>
+  </div>
+
+  <div class="pull-quote">
+    <p>"You can be completely wrong about a topic and still win the debate — if your argument is better constructed. This is both unfair and the whole point."</p>
+  </div>
+
+  <p>In formal debate you are often assigned a position you don't hold. This is intentional. The goal isn't to express your opinion — it's to build the strongest case for a position. Understanding the best version of an argument you disagree with is one of the most important things you can learn to do.</p>
+
+  <div class="task-box student-only">
+    <div class="task-header">
+      <div class="task-header-left"><span class="task-num">01</span><span class="task-title">Quick Position</span></div>
+      <span class="task-time">2 min</span>
+    </div>
+    <div class="task-body">
+      <p class="task-instruction">Before we go further — take a side on today's motion. You'll be asked to argue the <em>opposite</em> later.</p>
+      <div class="task-inputs">
+        <div class="input-group">
+          <div class="input-label">Today's motion</div>
+          <div style="font-family:var(--mono);font-size:0.78rem;padding:0.45rem 0;color:var(--text);border-bottom:1px solid var(--border);">Schools should monitor students' private social media to prevent harm</div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">My initial position</div>
+          <input class="task-input" placeholder="I think… because…">
+        </div>
+        <div class="input-group">
+          <div class="input-label">One reason someone might disagree with me</div>
+          <input class="task-input" placeholder="Someone on the other side might argue…">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2 -->
+  <div class="sec-header" id="sec2">
+    <div class="sec-eyebrow">Section 2</div>
+    <h2 class="sec-title">Build the Argument</h2>
+    <p class="sec-sub">Every argument has four layers. Miss one and the whole thing collapses.</p>
+  </div>
+  <div class="timing-badge">⏱ 8–10 min</div>
+
+  <p>The most common mistake: a claim without support, or evidence without connection. PEEL fixes both.</p>
+
+  <div class="framework">
+    <div class="framework-step step-P">
+      <div class="step-letter">P</div>
+      <div class="step-body">
+        <div class="step-name">Point</div>
+        <div class="step-desc">Your claim in one clear sentence. The position you are defending. Everything else exists to support this.</div>
+        <div class="step-example">Schools should have the right to monitor students' social media activity.</div>
+      </div>
+    </div>
+    <div class="framework-step step-E">
+      <div class="step-letter">E</div>
+      <div class="step-body">
+        <div class="step-name">Explain</div>
+        <div class="step-desc">The reasoning. <em>Why</em> is your point true? This is the logical mechanism — not a fact, but the logic connecting the claim to reality.</div>
+        <div class="step-example">Schools have a duty of care to their students. When online bullying or radicalisation originates in private messages, the school is the first institution capable of early intervention.</div>
+      </div>
+    </div>
+    <div class="framework-step step-E2">
+      <div class="step-letter">E</div>
+      <div class="step-body">
+        <div class="step-name">Evidence</div>
+        <div class="step-desc">A statistic, case study, expert opinion, or concrete example. This is what makes the argument believable rather than just logical.</div>
+        <div class="step-example">A 2022 UNESCO report found that 1 in 3 young people globally has experienced cyberbullying, with peak vulnerability between ages 13–16 — precisely the school age group.</div>
+      </div>
+    </div>
+    <div class="framework-step step-L">
+      <div class="step-letter">L</div>
+      <div class="step-body">
+        <div class="step-name">Link</div>
+        <div class="step-desc">Connect back to the motion explicitly. Don't assume the audience can see it — close the loop.</div>
+        <div class="step-example">This is precisely why monitoring powers are necessary: not to invade privacy, but to protect students at the exact moments when they are most at risk.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Common mistake</strong>
+    Skipping the Explain step. Evidence without reasoning is just a statistic — the audience has to do your argumentative work for you. Always explain <em>why</em> before you explain <em>what</em>.
+  </div>
+
+  <div class="task-box student-only">
+    <div class="task-header">
+      <div class="task-header-left"><span class="task-num">02</span><span class="task-title">Write Your PEEL</span></div>
+      <span class="task-time">5 min</span>
+    </div>
+    <div class="task-body">
+      <p class="task-instruction">Build one complete PEEL argument for your assigned side. Each layer in its own box.</p>
+      <div class="task-inputs">
+        <div class="input-group"><div class="input-label">P — Point (one sentence)</div><input class="task-input" placeholder="My argument is that…"></div>
+        <div class="input-group"><div class="input-label">E — Explain (the reasoning)</div><textarea class="task-input" rows="2" placeholder="This is true because…"></textarea></div>
+        <div class="input-group"><div class="input-label">E — Evidence (a specific fact or example)</div><textarea class="task-input" rows="2" placeholder="For example / According to…"></textarea></div>
+        <div class="input-group"><div class="input-label">L — Link (back to the motion)</div><input class="task-input" placeholder="This is why / This shows that…"></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3 -->
+  <div class="sec-header" id="sec3">
+    <div class="sec-eyebrow">Section 3</div>
+    <h2 class="sec-title">How to Rebut</h2>
+    <p class="sec-sub">Rebuttal is not "I disagree." It is a precise surgical strike on the logic of what was just said.</p>
+  </div>
+  <div class="timing-badge">⏱ 6–8 min</div>
+
+  <p>Most students rebut by restating their own argument more loudly. That is not rebuttal. Rebuttal means engaging directly with what was said — and showing exactly where it fails.</p>
+
+  <div class="rebuttal-steps">
+    <div class="rebuttal-step">
+      <div class="rb-icon">①</div>
+      <div>
+        <div class="rb-title">Acknowledge</div>
+        <div class="rb-desc">Name what was said before you attack it. This shows you were listening — and prevents the charge of attacking something they didn't argue.</div>
+        <div class="rb-phrase">"My opponent argues that…"&nbsp;&nbsp;"The Proposition claims that…"</div>
+      </div>
+    </div>
+    <div class="rebuttal-step">
+      <div class="rb-icon">②</div>
+      <div>
+        <div class="rb-title">Challenge</div>
+        <div class="rb-desc">Identify the weakest point — a faulty assumption, insufficient evidence, or a logical gap — and target it precisely.</div>
+        <div class="rb-phrase">"But this assumes that…"&nbsp;&nbsp;"The problem with this is…"&nbsp;&nbsp;"The evidence doesn't show…"</div>
+      </div>
+    </div>
+    <div class="rebuttal-step">
+      <div class="rb-icon">③</div>
+      <div>
+        <div class="rb-title">Rebuild</div>
+        <div class="rb-desc">After challenging their argument, restore the ground for your own. Show why the failure of their point strengthens yours.</div>
+        <div class="rb-phrase">"This actually supports our case, because…"&nbsp;&nbsp;"Far from proving their point, this shows that…"</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Here is a full rebuttal in action:</p>
+
+  <div class="example-block">
+    <div class="example-header"><span>Full rebuttal — Opposition</span><span class="ex-tag ex-tag-opp">Opposition</span></div>
+    <div class="example-body">
+      <div class="example-line"><span class="line-tag tag-p" style="font-size:0.5rem">ACK</span><span class="line-text">The Proposition argues that schools have a duty of care that extends to students' online lives, and that monitoring is necessary to discharge this duty.</span></div>
+      <div class="example-line"><span class="line-tag tag-e" style="font-size:0.5rem">CHAL</span><span class="line-text">But this conflates two entirely different things: a school's responsibility to respond to harm it becomes aware of, and a school's right to actively surveil private communications in search of potential harm. No law, no precedent, and no ethical framework equates these two obligations.</span></div>
+      <div class="example-line"><span class="line-tag tag-l" style="font-size:0.5rem">REB</span><span class="line-text">The Proposition's duty of care argument is real — but it proves too much. It would justify monitoring private conversations in bedrooms. If we reject that, as we all do, the question is where to draw the line — and the Proposition has not told us.</span></div>
+    </div>
+  </div>
+
+  <div class="task-box student-only">
+    <div class="task-header">
+      <div class="task-header-left"><span class="task-num">03</span><span class="task-title">Write a Rebuttal</span></div>
+      <span class="task-time">4 min</span>
+    </div>
+    <div class="task-body">
+      <p class="task-instruction">Write a rebuttal to this argument using the three-step structure.</p>
+      <div class="def-box" style="margin-bottom:1rem;">
+        <div class="def-label">Argument to rebut</div>
+        <div class="def-text" style="font-size:0.9rem;font-style:normal;line-height:1.55;">"Young people have a right to a private space to develop their identity without institutional surveillance. Social media, for many students, is that space. Monitoring it removes the only zone of freedom young people have."</div>
+      </div>
+      <div class="task-inputs">
+        <div class="input-group"><div class="input-label">Acknowledge — name what they argued</div><input class="task-input" placeholder="My opponent argues that…"></div>
+        <div class="input-group"><div class="input-label">Challenge — where does it fail?</div><textarea class="task-input" rows="2" placeholder="But this assumes that… / The problem is…"></textarea></div>
+        <div class="input-group"><div class="input-label">Rebuild — how does this strengthen your case?</div><textarea class="task-input" rows="2" placeholder="This actually shows that…"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4 -->
+  <div class="sec-header" id="sec4">
+    <div class="sec-eyebrow">Section 4</div>
+    <h2 class="sec-title">Persuasion Technique</h2>
+    <p class="sec-sub">Three modes. Every argument uses all of them — but not equally.</p>
+  </div>
+  <div class="timing-badge">⏱ 6–8 min</div>
+
+  <p>The Greeks named three modes of persuasion two and a half thousand years ago. They still describe everything that happens in a debate.</p>
+
+  <div class="technique-grid">
+    <div class="technique-card">
+      <div class="tc-greek">Ethos</div>
+      <div class="tc-english">Credibility &amp; Authority</div>
+      <div class="tc-def">You persuade through <em>who you are</em> — your knowledge, experience, and trustworthiness as a speaker.</div>
+      <div class="tc-example">"As someone who has experienced cyberbullying directly, I can tell you the harm is not theoretical."</div>
+    </div>
+    <div class="technique-card">
+      <div class="tc-greek">Pathos</div>
+      <div class="tc-english">Emotion &amp; Empathy</div>
+      <div class="tc-def">You persuade through <em>what the audience feels</em> — connecting your argument to values, fears, hopes, and shared human experience.</div>
+      <div class="tc-example">"Imagine a 14-year-old reading messages about herself at 2am, with no adult even aware it is happening."</div>
+    </div>
+    <div class="technique-card">
+      <div class="tc-greek">Logos</div>
+      <div class="tc-english">Logic &amp; Evidence</div>
+      <div class="tc-def">You persuade through <em>the strength of your reasoning</em> — statistics, logical structure, clear causation, and verifiable facts.</div>
+      <div class="tc-example">"40% of documented school bullying cases had an online component that began outside school hours — yet schools had no visibility."</div>
+    </div>
+  </div>
+
+  <p>The skill is in the balance. A speech that is purely logical feels cold. A speech that is purely emotional is easily dismissed as manipulation. Strong debaters weave all three — but they also make <em>choices</em>. Which mode is doing the real work here, and is that the right call for this audience?</p>
+
+  <div class="task-box student-only">
+    <div class="task-header">
+      <div class="task-header-left"><span class="task-num">04</span><span class="task-title">Diagnose the Speech</span></div>
+      <span class="task-time">4 min</span>
+    </div>
+    <div class="task-body">
+      <p class="task-instruction">Read this speech extract. Identify which persuasion mode is carrying the most weight — then decide whether that was the right choice.</p>
+      <div class="def-box" style="margin-bottom:1rem;">
+        <div class="def-label">Speech extract</div>
+        <div class="def-text" style="font-size:0.82rem;font-style:normal;line-height:1.65;">"Last year, a 15-year-old in Baden-Württemberg took her own life after months of targeted harassment in private group chats. Her teachers saw nothing — because they had no visibility and no mechanism to see anything. Her parents found out three days after she died. If one school in that district had monitoring systems in place, there is a real possibility she would be alive today. We cannot continue to treat privacy as more important than survival."</div>
+      </div>
+      <div class="task-inputs">
+        <div class="input-group"><div class="input-label">Which mode is doing the most work — Ethos, Pathos, or Logos?</div><input class="task-input" placeholder="I think the dominant mode is… because…"></div>
+        <div class="input-group"><div class="input-label">Is this the right choice for a debate audience? Why or why not?</div><textarea class="task-input" rows="2" placeholder="This is / isn't the right call because…"></textarea></div>
+        <div class="input-group"><div class="input-label">What is missing from this extract — and how would you attack it?</div><textarea class="task-input" rows="2" placeholder="The weakness here is…"></textarea></div>
+      </div>
+      <p class="task-hint">A debate audience is specifically looking for holes in the logic — which makes pure pathos a vulnerability as well as a weapon.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5 -->
+  <div class="sec-header" id="sec5">
+    <div class="sec-eyebrow">Section 5</div>
+    <h2 class="sec-title">Points of Information</h2>
+    <p class="sec-sub">Live interrupts. One sentence. Timed. Either accepted or declined — but always strategic.</p>
+  </div>
+  <div class="timing-badge">⏱ 4–5 min</div>
+
+  <p>A Point of Information (POI) is an interruption you offer to the opposing speaker during their speech. They can accept or decline. If accepted, you have roughly 15 seconds to deliver a pointed question or challenge.</p>
+
+  <div class="poi-grid">
+    <div class="poi-col">
+      <div class="poi-col-label">Rules for offering a POI</div>
+      <div class="poi-item"><strong>When to offer</strong>After the first minute and before the last minute of a speech. Never during protected time.</div>
+      <div class="poi-item"><strong>How to offer</strong>Stand, raise a hand or say "Point of Information." Wait to be accepted or declined.</div>
+      <div class="poi-item"><strong>If declined</strong>Sit immediately. No reaction, no argument.</div>
+      <div class="poi-item"><strong>If accepted</strong>Speak for no more than 15 seconds. One point only. Then sit.</div>
+    </div>
+    <div class="poi-col">
+      <div class="poi-col-label">What makes a good POI</div>
+      <div class="poi-item"><strong>Target a contradiction</strong>"You said X in your opening, but you just claimed Y — which is true?"</div>
+      <div class="poi-item"><strong>Challenge the evidence</strong>"Does that statistic include cases outside the age range you mentioned?"</div>
+      <div class="poi-item"><strong>Expose a gap</strong>"If monitoring is only for extreme cases, who defines what counts as extreme?"</div>
+      <div class="poi-item"><strong>What to avoid</strong>Long speeches disguised as questions. Interrupting to repeat your own argument. Asking questions you can't follow through on.</div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>As the speaker receiving a POI</strong>
+    You control whether to accept. Accept 1–2 POIs per speech — it shows confidence. Always acknowledge before responding: "I'll take that point." Then answer it, or explicitly set it aside: "I'll return to that — but first…"
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6 -->
+  <div class="sec-header" id="sec6">
+    <div class="sec-eyebrow">Section 6</div>
+    <h2 class="sec-title">Live Practice</h2>
+    <p class="sec-sub">Theory ends here. Everything from this point is done on your feet.</p>
+  </div>
+  <div class="timing-badge">⏱ 20–25 min total</div>
+
+  <div class="motion-card">
+    <div class="motion-label">Today's Motion</div>
+    <div class="motion-text">This House Believes that schools should monitor students' private social media to prevent harm</div>
+    <div class="motion-sides">
+      <span class="motion-side side-prop">Proposition — YES</span>
+      <span class="motion-side side-opp">Opposition — NO</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom:0.75rem;font-family:var(--mono);font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--red);">Round 1 — PEEL + Rebuttal only</div>
+
+  <div class="timing-guide">
+    <div class="timing-row header">
+      <div class="timing-cell">Time</div>
+      <div class="timing-cell">Phase</div>
+      <div class="timing-cell">What happens</div>
+    </div>
+    <div class="timing-row">
+      <div class="timing-cell timing-time">3 min</div>
+      <div class="timing-cell timing-phase">Prep</div>
+      <div class="timing-cell">Each side prepares one PEEL argument. Assign a first speaker. No frame-breaking yet — PEEL and rebuttal only.</div>
+    </div>
+    <div class="timing-row">
+      <div class="timing-cell timing-time">2 min</div>
+      <div class="timing-cell timing-phase">Prop opens</div>
+      <div class="timing-cell">Proposition presents. Opposition may offer POIs after 30 seconds.</div>
+    </div>
+    <div class="timing-row">
+      <div class="timing-cell timing-time">2 min</div>
+      <div class="timing-cell timing-phase">Opp opens</div>
+      <div class="timing-cell">Opposition presents — must rebut before making their own argument.</div>
+    </div>
+    <div class="timing-row">
+      <div class="timing-cell timing-time">3 min</div>
+      <div class="timing-cell timing-phase">Open debate</div>
+      <div class="timing-cell">Any speaker may contribute. Rebuttal, new arguments, POIs. No frame-breaking yet.</div>
+    </div>
+  </div>
+
+  <div class="end-box">
+    <div class="end-label">End of Part One</div>
+    <div class="end-text">Both sides argued well. Neither side landed a decisive blow.<br><br>That's not a failure — that's the point. You were both operating inside the same frame. Both arguments assumed the debate is about whether monitoring is justified. Neither side questioned whether the school's jurisdiction extends to private digital space at all.<br><br><em>Sit with that. We'll name it in Part Two.</em></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── CANVAS ──
+(function(){
+  const c=document.getElementById('canvas-bg'),ctx=c.getContext('2d');let stars=[];
+  function resize(){ c.width=innerWidth;c.height=innerHeight;stars=Array.from({length:Math.floor(c.width*c.height/7000)},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*0.9+0.1,a:Math.random(),sp:0.002+Math.random()*0.003,ph:Math.random()*Math.PI*2})); }
+  function draw(t){ ctx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{ const a=s.a*(0.4+0.6*Math.sin(t*0.001*(s.sp*500)+s.ph));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(200,210,230,${a})`;ctx.fill(); });requestAnimationFrame(draw); }
+  window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
+})();
+
+// ── PROGRESS ──
+window.addEventListener('scroll',()=>{
+  const pct=(window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
+  document.getElementById('progressStrip').style.width=Math.min(100,pct)+'%';
+},{passive:true});
+
+// ── PROJECTOR ──
+let projectorMode=false,currentSlide=0;
+const totalSlides=8;
+function toggleMode(){
+  projectorMode=!projectorMode;
+  document.body.classList.toggle('projector',projectorMode);
+  const btn=document.getElementById('modeToggle');
+  btn.textContent=projectorMode?'✕ Exit projector':'⬜ Projector';
+  btn.classList.toggle('active',projectorMode);
+  if(projectorMode){ showSlide(currentSlide); document.addEventListener('keydown',projKeys); }
+  else{ hideSlides(); document.removeEventListener('keydown',projKeys); }
+}
+function showSlide(n){
+  document.querySelectorAll('.projector-slide').forEach((s,i)=>s.style.display=i===n?'flex':'none');
+  document.getElementById('slideCounter').textContent=(n+1)+' / '+totalSlides;
+  document.getElementById('prevBtn').disabled=n===0;
+  document.getElementById('nextBtn').disabled=n===totalSlides-1;
+}
+function hideSlides(){ document.querySelectorAll('.projector-slide').forEach(s=>s.style.display='none'); }
+function changeSlide(d){ currentSlide=Math.max(0,Math.min(totalSlides-1,currentSlide+d)); showSlide(currentSlide); }
+function projKeys(e){
+  if(e.code==='ArrowRight'||e.code==='Space'){ e.preventDefault(); changeSlide(1); }
+  if(e.code==='ArrowLeft'){ e.preventDefault(); changeSlide(-1); }
+  if(e.key.toLowerCase()==='escape') toggleMode();
+}
+hideSlides();
+</script>
+</body>
+</html>
